@@ -1,58 +1,171 @@
-# Breast Cancer Relapse Prediction – GSE20685
+# Breast Cancer Relapse Prediction — GSE20685
 
-This project applies **machine learning** to predict **regional relapse** in breast cancer patients using the [GSE20685](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20685) gene expression dataset.
+Machine Learning + GEO Data Engineering + Clinical Metadata Extraction
 
-It includes **data preprocessing, feature selection, class balancing (SMOTE)**, and model training using **Logistic Regression, Random Forest, and XGBoost**, along with visualizations for interpretation.
+This repository contains a complete workflow for processing the GEO dataset GSE20685 and training machine learning models to predict regional relapse in breast cancer patients.
+The project demonstrates:
 
----
+🔹 complex GEO metadata parsing
 
-## Project Structure
+🔹 high-dimensional gene expression handling
+
+🔹 clinical variable extraction
+
+🔹 feature engineering
+
+🔹 class imbalance methods
+
+🔹 model comparison (LR, RF, XGBoost)
+
+🔹 performance visualization
+
+## 📌 1. Transcriptomic + Clinical Data Processing
+
+process_gse20685.py
+
+This script performs full reconstruction of the dataset from the raw GEO series matrix:
+
+### GEO series matrix parsing
+
+🔹 Identify "!series_matrix_table_begin" and "end" markers
+
+🔹 Extract gene expression block dynamically
+
+🔹 Remove trailing metadata rows
+
+🔹 Transpose matrix so samples = rows, genes = columns
+
+### Clinical metadata extraction
+
+GEO stores metadata in complex lines like:
+
+🔹 !Sample_characteristics_ch1 = subtype: Luminal A
+🔹 !Sample_characteristics_ch1 = relapse: 0
+
+
+### The script:
+
+🔹 iterates through all !Sample_characteristics_ch1 fields
+
+🔹 handles missing or unlabeled characteristics
+
+🔹 splits key: value pairs
+
+🔹 ensures clinical columns are unique and consistent
+
+🔹 maps GEO accession IDs → sample titles
+
+🔹 merges expression + clinical metadata
+
+🔹 performs QC checks for missingness, inconsistent labels, and sample mismatches
+
+🔹 The final merged dataset is saved as:
+
+processed_gse20685_data.csv
+gse20685_clinical_data.csv
+
+
+This file becomes the input for machine learning.
+
+### 📌 2. Machine Learning Pipeline
+
+breast_cancer_relapse_prediction.py
+
+The ML workflow includes:
+
+### Data Cleaning
+
+🔹 Remove non-numeric columns
+
+🔹 Drop unknown relapse labels
+
+🔹 Stratified train/test split
+
+### Feature Engineering
+
+🔹 Compute variance of each gene
+
+🔹 Select top 1000 most variable genes
+
+🔹 Standard scaling (StandardScaler)
+
+### Class Imbalance Handling
+
+🔹 class_weight="balanced" for LR & RF
+
+🔹 SMOTE oversampling for XGBoost training
+
+## Models Trained
+
+🔹 Logistic Regression
+
+🔹 Random Forest
+
+🔹 XGBoost (best-performing)
+
+## Evaluation
+
+For each model:
+
+🔹 Accuracy
+
+🔹 ROC-AUC
+
+🔹 Confusion matrices
+
+🔹 Precision/Recall
+
+🔹 Classification report
+
+🔹 Top 15 feature importance scores
+
+🔹 Plots include:
+
+ROC curves
+
+Confusion matrices
+
+Feature importance barplots
+
+All stored in Visualizations.pdf.
+
+## 📈 Key Results
+
+🔹 Best Model: XGBoost
+
+🔹 Accuracy: 93.5%
+
+🔹 AUC improved over baseline
+
+🔹 Recall of relapse cases improved after SMOTE
+
+Note: Due to class imbalance and small event counts, results should be interpreted as exploratory rather than clinical.
+
+## 📂 Repository Structure
 AIML_Assessment_Repo/
-├── process_gse20685.py # Script to process raw GEO data into cleaned dataset
-├── breast_cancer_relapse_prediction.py # Final ML pipeline (training, evaluation, plots)
-├── Visualizations.pdf # ROC curves, confusion matrices, feature importance plots
-├── README.md # Project documentation
-└── .gitignore # Ignore large/raw files
+│── process_gse20685.py
+│── breast_cancer_relapse_prediction.py
+│── Visualizations.pdf
+│── README.md
 
----
 
-## Dataset
-- **Source:** [NCBI GEO: GSE20685](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20685)  
-- **Platform:** Affymetrix Human Genome U133 Plus 2.0 Array  
-- **Samples:** 327 breast cancer patients (gene expression + clinical metadata)  
-- **Target Variable:** `regional_relapse` (binary: 0 = no relapse, 1 = relapse)  
+## 🎯 Purpose of This Project
 
-### Accessing the Data
-Due to size constraints, the **processed dataset (`processed_gse20685_data.csv`) is not included** in this repository.  
+This project was created to practice:
 
-To reproduce:
-1. **Download raw dataset**: `GSE20685_series_matrix.txt` from [GEO](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20685).  
-2. **Run** `process_gse20685.py` to generate the processed CSV.  
-3. Alternatively, **contact the repository owner** for the preprocessed file.  
+🔹 reconstructing structured datasets from raw GEO files
 
----
+🔹 cleaning and merging gene expression with clinical metadata
 
-## Installation
-Clone the repository:
-```bash
-git clone https://github.com/<your-username>/AIML_Assessment_Repo.git
-cd AIML_Assessment_Repo
-Install dependencies:
-pip install pandas numpy scikit-learn imbalanced-learn xgboost matplotlib
+🔹 applying ML methods in high-dimensional biomedical settings
 
-Run the final modeling script:
-python breast_cancer_relapse_prediction.py
+🔹 evaluating performance under severe class imbalance
 
-## Results
-Best Model: XGBoost – 93.5% accuracy, improved relapse case detection (recall: 20%).
+🔹 understanding limitations of relapse prediction from microarray data
 
-Visuals: ROC curves, confusion matrices, and top 15 feature importance charts are in Visualizations.pdf.
+It is an educational machine learning project, not a clinical model.
 
-## References
-NCBI GEO: GSE20685
+### 🤝 Author
 
-Pedregosa et al., Scikit-learn: Machine Learning in Python, JMLR, 2011.
-
-Chen & Guestrin, XGBoost: A Scalable Tree Boosting System, KDD, 2016.
-
-Imbalanced-learn Documentation.
+Khushi Tyagi
+Bioinformatics • Machine Learning • Cancer Genomics
