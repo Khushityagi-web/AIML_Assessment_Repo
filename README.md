@@ -1,171 +1,142 @@
 # Breast Cancer Relapse Prediction — GSE20685
 
-Machine Learning + GEO Data Engineering + Clinical Metadata Extraction
+**Machine Learning + GEO Data Engineering + Clinical Metadata Extraction**
 
-This repository contains a complete workflow for processing the GEO dataset GSE20685 and training machine learning models to predict regional relapse in breast cancer patients.
-The project demonstrates:
+This repository contains a complete workflow for processing the GEO dataset **GSE20685** and training machine learning models to predict regional relapse in breast cancer patients. The project demonstrates:
 
-🔹 complex GEO metadata parsing
+- Complex GEO metadata parsing  
+- High-dimensional gene expression handling  
+- Clinical variable extraction  
+- Feature engineering  
+- Class imbalance methods  
+- Model comparison (LR, RF, XGBoost)  
+- Performance visualization  
 
-🔹 high-dimensional gene expression handling
+---
 
-🔹 clinical variable extraction
+## 1. Transcriptomic + Clinical Data Processing
 
-🔹 feature engineering
+**File:** `process_gse20685.py`
 
-🔹 class imbalance methods
+This script performs full reconstruction of the dataset from the raw GEO series matrix.
 
-🔹 model comparison (LR, RF, XGBoost)
+### GEO Series Matrix Parsing
 
-🔹 performance visualization
+- Identify `!series_matrix_table_begin` and `end` markers  
+- Extract gene expression block dynamically  
+- Remove trailing metadata rows  
+- Transpose matrix so samples = rows, genes = columns  
 
-## 📌 1. Transcriptomic + Clinical Data Processing
+### Clinical Metadata Extraction
 
-process_gse20685.py
+GEO stores metadata in complex lines such as:
 
-This script performs full reconstruction of the dataset from the raw GEO series matrix:
+    !Sample_characteristics_ch1 = subtype: Luminal A
+    !Sample_characteristics_ch1 = relapse: 0
 
-### GEO series matrix parsing
+The script:
 
-🔹 Identify "!series_matrix_table_begin" and "end" markers
+- Iterates through all `!Sample_characteristics_ch1` fields  
+- Handles missing or unlabeled characteristics  
+- Splits key:value pairs  
+- Ensures clinical columns are unique and consistent  
+- Maps GEO accession IDs to sample titles  
+- Merges expression and clinical metadata  
+- Performs QC checks for missingness, inconsistent labels, and sample mismatches  
 
-🔹 Extract gene expression block dynamically
+The final merged datasets are saved as:
 
-🔹 Remove trailing metadata rows
+- `processed_gse20685_data.csv`  
+- `gse20685_clinical_data.csv`  
 
-🔹 Transpose matrix so samples = rows, genes = columns
+These files become the input for machine learning.
 
-### Clinical metadata extraction
+---
 
-GEO stores metadata in complex lines like:
+## 2. Machine Learning Pipeline
 
-🔹 !Sample_characteristics_ch1 = subtype: Luminal A
-🔹 !Sample_characteristics_ch1 = relapse: 0
-
-
-### The script:
-
-🔹 iterates through all !Sample_characteristics_ch1 fields
-
-🔹 handles missing or unlabeled characteristics
-
-🔹 splits key: value pairs
-
-🔹 ensures clinical columns are unique and consistent
-
-🔹 maps GEO accession IDs → sample titles
-
-🔹 merges expression + clinical metadata
-
-🔹 performs QC checks for missingness, inconsistent labels, and sample mismatches
-
-🔹 The final merged dataset is saved as:
-
-processed_gse20685_data.csv
-gse20685_clinical_data.csv
-
-
-This file becomes the input for machine learning.
-
-### 📌 2. Machine Learning Pipeline
-
-breast_cancer_relapse_prediction.py
-
-The ML workflow includes:
+**File:** `breast_cancer_relapse_prediction.py`
 
 ### Data Cleaning
 
-🔹 Remove non-numeric columns
-
-🔹 Drop unknown relapse labels
-
-🔹 Stratified train/test split
+- Remove non-numeric columns  
+- Drop unknown relapse labels  
+- Stratified train/test split  
 
 ### Feature Engineering
 
-🔹 Compute variance of each gene
-
-🔹 Select top 1000 most variable genes
-
-🔹 Standard scaling (StandardScaler)
+- Compute variance of each gene  
+- Select top 1000 most variable genes  
+- Standard scaling using `StandardScaler`  
 
 ### Class Imbalance Handling
 
-🔹 class_weight="balanced" for LR & RF
+- `class_weight="balanced"` for Logistic Regression and Random Forest  
+- SMOTE oversampling for XGBoost training  
 
-🔹 SMOTE oversampling for XGBoost training
+### Models Trained
 
-## Models Trained
+- Logistic Regression  
+- Random Forest  
+- XGBoost (best-performing)  
 
-🔹 Logistic Regression
-
-🔹 Random Forest
-
-🔹 XGBoost (best-performing)
-
-## Evaluation
+### Evaluation
 
 For each model:
 
-🔹 Accuracy
+- Accuracy  
+- ROC-AUC  
+- Confusion matrices  
+- Precision / Recall  
+- Classification report  
+- Top 15 feature importance scores  
 
-🔹 ROC-AUC
+Plots include:
 
-🔹 Confusion matrices
+- ROC curves  
+- Confusion matrices  
+- Feature importance bar plots  
 
-🔹 Precision/Recall
+All outputs are stored in `Visualizations.pdf`.
 
-🔹 Classification report
+---
 
-🔹 Top 15 feature importance scores
+## Key Results
 
-🔹 Plots include:
+- Best Model: **XGBoost**  
+- Accuracy: **93.5%**  
+- AUC improved over baseline  
+- Recall of relapse cases improved after SMOTE  
 
-ROC curves
+**Note:** Due to class imbalance and small event counts, results should be interpreted as exploratory rather than clinical.
 
-Confusion matrices
+---
 
-Feature importance barplots
+## Repository Structure
 
-All stored in Visualizations.pdf.
+    AIML_Assessment_Repo/
+    │── process_gse20685.py
+    │── breast_cancer_relapse_prediction.py
+    │── Visualizations.pdf
+    │── README.md
 
-## 📈 Key Results
+---
 
-🔹 Best Model: XGBoost
-
-🔹 Accuracy: 93.5%
-
-🔹 AUC improved over baseline
-
-🔹 Recall of relapse cases improved after SMOTE
-
-Note: Due to class imbalance and small event counts, results should be interpreted as exploratory rather than clinical.
-
-## 📂 Repository Structure
-AIML_Assessment_Repo/
-│── process_gse20685.py
-│── breast_cancer_relapse_prediction.py
-│── Visualizations.pdf
-│── README.md
-
-
-## 🎯 Purpose of This Project
+## Purpose of This Project
 
 This project was created to practice:
 
-🔹 reconstructing structured datasets from raw GEO files
+- Reconstructing structured datasets from raw GEO files  
+- Cleaning and merging gene expression with clinical metadata  
+- Applying ML methods in high-dimensional biomedical settings  
+- Evaluating performance under severe class imbalance  
+- Understanding limitations of relapse prediction from microarray data  
 
-🔹 cleaning and merging gene expression with clinical metadata
+This is an **educational machine learning project**, not a clinical model.
 
-🔹 applying ML methods in high-dimensional biomedical settings
+---
 
-🔹 evaluating performance under severe class imbalance
+## Author
 
-🔹 understanding limitations of relapse prediction from microarray data
-
-It is an educational machine learning project, not a clinical model.
-
-### 🤝 Author
-
-Khushi Tyagi
+**Khushi Tyagi**  
 Bioinformatics • Machine Learning • Cancer Genomics
